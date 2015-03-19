@@ -20,6 +20,6 @@ TimeoutStartSec=0
 ExecStartPre=/usr/bin/docker pull {{.ImagePrefix}}/{{.Name}}:{{.Version}}
 ExecStartPre=-/usr/bin/docker rm -f {{.Name}}-{{.Version}}-{{.Timestamp}}-%i
 ExecStart=/usr/bin/docker run --name {{.Name}}-{{.Version}}-{{.Timestamp}}-%i -p 3000 {{.ImagePrefix}}/{{.Name}}:{{.Version}}
-ExecStartPost=/bin/sh -c "sleep 10; /usr/bin/etcdctl set /vulcand/upstreams/{{.Name}}/endpoints/{{.Name}}-{{.Version}}-{{.Timestamp}}-%i http://$COREOS_PRIVATE_IPV4:$(echo $(/usr/bin/docker port {{.Name}}-{{.Version}}-{{.Timestamp}}-%i 3000) | cut -d ':' -f 2)"
+ExecStartPost=/bin/sh -c "sleep 10; /usr/bin/etcdctl set /vulcand/backends/{{.Name}}}/backend '{"Type": "http"}'; /usr/bin/etcdctl set /vulcand/backends/{{.Name}}/servers/{{.Name}}-{{.Version}}-{{.Timestamp}}-%i '{"URL": "http://$COREOS_PRIVATE_IPV4:$(echo $(/usr/bin/docker port {{.Name}}-{{.Version}}-{{.Timestamp}}-%i 3000) | cut -d ':' -f 2)"}'; etcdctl set /vulcand/frontends/{{.Name}}/frontend '{"Type": "http", "BackendId": "{{.Name}}", "Route": "Path(`/`)"}'"
 ExecStop=/bin/sh -c "/usr/bin/etcdctl rm '/vulcand/upstreams/{{.Name}}/endpoints/{{.Name}}-{{.Version}}-{{.Timestamp}}-%i' ; /usr/bin/docker rm -f {{.Name}}-{{.Version}}-{{.Timestamp}}-%i"
 `
