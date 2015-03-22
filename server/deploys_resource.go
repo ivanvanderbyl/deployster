@@ -167,6 +167,10 @@ func (dr *DeploysResource) startUnits(serviceName string, version string, timest
 	return nil
 }
 
+// func (dr *DeploysResource) startSidekickUnit() err {
+// 	dr.Fleet.CreateUnit()
+// }
+
 // determineNumberOfInstances is a helper function to either return the number
 // of instances specified or provide a default value based on the number of
 // running versions and units.
