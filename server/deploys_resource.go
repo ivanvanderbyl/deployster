@@ -11,6 +11,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/CenturyLinkLabs/docker-reg-client/registry"
 	"github.com/coreos/fleet/schema"
 	"github.com/coreos/fleet/unit"
 )
@@ -68,6 +69,12 @@ type UnitTemplate struct {
 // params.
 func (dr *DeploysResource) Create(u *url.URL, h http.Header, req *DeployRequest) (int, http.Header, interface{}, error) {
 	serviceName := u.Query().Get("name")
+
+	err := validateRepositoryTag(dr.ImagePrefix, req.Deploy.Version)
+	if err != nil {
+		log.Println(err)
+		return http.StatusNotAcceptable, nil, nil, err
+	}
 
 	if req.Deploy.Timestamp == "" {
 		req.Deploy.Timestamp = time.Now().UTC().Format("2006.01.02-15.04.05")
@@ -258,4 +265,33 @@ func (dr *DeploysResource) destroyPrevious(previousFleetUnit string, currentFlee
 			return
 		}
 	}
+}
+
+// validateRepositoryTag checks for the given version tag in the remote registry.
+// Return nil is valid, otherwise an error explaining why.
+func validateRepositoryTag(repo, version string) (err error) {
+	registryClient := registry.NewClient()
+
+	// TODO: Replace this
+	username, password := "", ""
+
+	if username != "" && password != "" {
+		basicAuth := registry.BasicAuth{username, password}
+		auth, err := registryClient.Hub.GetReadTokenWithAuth(repo, basicAuth)
+	} else {
+		auth, err := registryClient.Hub.GetReadToken(repo)
+	}
+	if err != nil {
+		return err
+	}
+
+	tags, err := registryClient.Repository.ListTags(repo, auth)
+	if err != nil {
+		return err
+	}
+
+	if _, ok := tags[version]; !ok {
+		err = fmt.Errorf("The tag '%s' was not found in the registry", version)
+	}
+	return
 }

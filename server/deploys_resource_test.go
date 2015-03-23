@@ -27,6 +27,10 @@ func (suite *DeploysResourceTestSuite) SetupTest() {
 	suite.Subject = DeploysResource{suite.FleetClientMock, "mmmhm"}
 }
 
+func (suite *DeploysResourceTestSuite) TestCreateValidatesRepositoryWithRegistry() {
+
+}
+
 func (suite *DeploysResourceTestSuite) TestCreateWithoutPassedInstancesAndNoInstancesRunning() {
 	expectedOptions := getUnitOptions(UnitTemplate{"carousel", "abc123", "mmmhm", "2006.01.02-15.04.05"})
 	suite.FleetClientMock.On("Units").Return([]*schema.Unit{}, nil)
